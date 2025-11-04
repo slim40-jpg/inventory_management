@@ -1,9 +1,23 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 
-const generateToken = (userId) => {
-	const secret = process.env.JWT_SECRET || 'change_this_secret';
-	return jwt.sign({ id: userId }, secret, { expiresIn: '1d' });
+const generateToken = (userId, role, entreprise) => {
+	const secret = process.env.JWT_SECRET;
+	return jwt.sign({ 
+		id: userId,
+		role: role,
+		entreprise: entreprise
+	}, secret, { expiresIn: '1d' });
+};
+
+// Helper to check if user has admin rights for their company
+const isCompanyAdmin = async (userId, entreprise) => {
+	const user = await User.findOne({ 
+		_id: userId, 
+		role: 'admin', 
+		entreprise: entreprise 
+	});
+	return !!user;
 };
 
 // Register a new user
@@ -20,10 +34,25 @@ exports.register = async (req, res) => {
 			return res.status(400).json({ success: false, message: 'User with given email/username/phone already exists' });
 		}
 
-		const user = new User({ username, email, password, entreprise, phone_number, role });
+		// Validate role
+		if (role && !['admin', 'staff'].includes(role)) {
+			return res.status(400).json({ 
+				success: false, 
+				message: 'Invalid role. Must be either "admin" or "staff"' 
+			});
+		}
+
+		const user = new User({ 
+			username, 
+			email, 
+			password, 
+			entreprise, 
+			phone_number, 
+			role: role || 'staff' // Default to staff if not specified
+		});
 		await user.save();
 
-		const token = generateToken(user._id);
+		const token = generateToken(user._id, user.role, user.entreprise);
 
 		return res.status(201).json({
 			success: true,
@@ -63,7 +92,7 @@ exports.login = async (req, res) => {
 			return res.status(401).json({ success: false, message: 'Invalid credentials' });
 		}
 
-		const token = generateToken(user._id);
+		const token = generateToken(user._id, user.role, user.entreprise);
 
 		return res.status(200).json({
 			success: true,
@@ -107,4 +136,3 @@ exports.getProfile = async (req, res) => {
 exports.logout = async (req, res) => {
 	return res.status(200).json({ success: true, message: 'Logged out' });
 };
-
