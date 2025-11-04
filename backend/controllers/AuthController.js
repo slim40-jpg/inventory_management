@@ -132,7 +132,7 @@ exports.getProfile = async (req, res) => {
 	}
 };
 
-// Logout (stateless JWT) - client should discard token. Here we just return success.
+// Logout (stateless JWT) - client should discard token. Here we just return success
 exports.logout = async (req, res) => {
 	return res.status(200).json({ success: true, message: 'Logged out' });
 };
