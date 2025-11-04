@@ -1,6 +1,39 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
-
+const express = require('express');
+const app = express();
 const auth = async (req , res , next) => {
-     const token = req.header('Authorization')?.replace  
+     let token;
+     const SECRETKEY = process.env.JWT_SECRET || "s5dds62s5c6d";
+     console.log("req.header" , req.method)
+     if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+          token = req.headers.authorization.split(" ")[1];
+     }
+
+     if (!token) {
+          res.status(401).json({
+               success: false,
+               message: "token introuvable",
+          });
+
+     }
+     else {
+          const decoded = jwt.verify(token , SECRETKEY);
+          if(!decoded) {
+               res.status(401).json({
+                    success: false,
+                    message: "token invalid",
+               });
+          }
+          else {
+               req.user = User.findById(decoded.id);
+               res.status(200).json({
+                    success: true,
+                    message: "user trouvable",
+               });
+          };
+
+     }
 };
+
+module.exports = auth;

@@ -12,6 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
 app.get('/' , async (req , res) => {
      console.log("welcome to our service");
      res.status(200).json({
@@ -19,7 +20,6 @@ app.get('/' , async (req , res) => {
         message: "welcome to our service",
      });
 });
-
 app.use('/api/AuthRoute' , AuthRouter);
 console.log(AuthRouter);
 
@@ -31,6 +31,8 @@ app.get('/api/health' , (req , res) =>{
 
     });
 });
+const auth = require('./middleware/AuthMiddleware');
+app.use(auth);
 
 
 const PORT = process.env.PORT || 5000;
