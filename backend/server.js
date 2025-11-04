@@ -6,6 +6,7 @@ const AuthRouter = require('./routes/AuthRoute');
 const StockRouter = require('./routes/StockRoute');
 
 dotenv.config()
+connectdb();
 
 const app = express();
 
@@ -22,6 +23,9 @@ app.get('/' , async (req , res) => {
 
 app.use('/api/AuthRoute' , AuthRouter);
 console.log(AuthRouter);
+app.use('/api/stock', StockRouter);
+console.log(StockRouter);
+
 
 app.get('/api/health' , (req , res) =>{
     res.status(200).json({
