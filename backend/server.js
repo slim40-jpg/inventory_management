@@ -38,4 +38,5 @@ const NODE_ENV = process.env.NODE_ENV || 'development'
 app.listen(PORT , () => {
      console.log(`Server is running on ${PORT}`);
      console.log(`Environment : ${NODE_ENV}`);
+     
 });
