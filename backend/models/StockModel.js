@@ -18,6 +18,9 @@ const StockSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    EntrepriseModel
+    entreprise: {
+        type: String,
+        required: true
+    }
 }, {timestamps: true});
 module.exports = mongoose.model('Stock' , StockSchema);

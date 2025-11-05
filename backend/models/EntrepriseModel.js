@@ -10,10 +10,7 @@ const EntrepriseSchema = new mongoose.Schema({
         type: String,
 
     },
-    logo : {
-        type: SVGAElement,
-        
-    },
+    
     CA : {
         type: Number,
     }
