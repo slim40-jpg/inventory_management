@@ -5,7 +5,7 @@ const AuthController = require('../controllers/AuthController');
 
 // Example route
 router.post('/login', AuthController.login )
-router.post('/SignUp' ,AuthController.signUp);
+router.post('/SignUp' ,AuthController.register);
 //router.post('/refresh', refreshToken);
 router.post('/logout', AuthController.logout);
 

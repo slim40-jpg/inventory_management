@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 
 const generateToken = (userId, role, entreprise) => {
-	const secret = process.env.JWT_SECRET;
+	const secret = process.env.JWT_SECRET || "skmdpcdpd4525";
 	return jwt.sign({ 
 		id: userId,
 		role: role,
@@ -21,7 +21,7 @@ const isCompanyAdmin = async (userId, entreprise) => {
 };
 
 // Register a new user
-exports.register = async (req, res) => {
+const register = async (req, res) => {
 	try {
 		const { username, email, password, entreprise, phone_number, role } = req.body;
 
@@ -75,7 +75,7 @@ exports.register = async (req, res) => {
 };
 
 // Login existing user
-exports.login = async (req, res) => {
+const login = async (req, res) => {
 	try {
 		const { email, password } = req.body;
 		if (!email || !password) {
@@ -115,7 +115,7 @@ exports.login = async (req, res) => {
 };
 
 // Get profile for authenticated user (expects middleware to set req.user)
-exports.getProfile = async (req, res) => {
+const getProfile = async (req, res) => {
 	try {
 		const userId = req.user?.id || req.user?._id;
 		if (!userId) {
@@ -133,6 +133,11 @@ exports.getProfile = async (req, res) => {
 };
 
 // Logout (stateless JWT) - client should discard token. Here we just return success
-exports.logout = async (req, res) => {
+const logout = async (req, res) => {
 	return res.status(200).json({ success: true, message: 'Logged out' });
 };
+module.exports = {
+	login,
+	register,
+	logout
+}

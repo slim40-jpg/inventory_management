@@ -1,7 +1,7 @@
 const User = require('../models/UserModel');
 
 // Get all users from the same company
-exports.getCompanyUsers = async (req, res) => {
+const getCompanyUsers = async (req, res) => {
     try {
         const { entreprise } = req.user;
         
@@ -25,7 +25,7 @@ exports.getCompanyUsers = async (req, res) => {
 };
 
 // Get user by ID (only from same company)
-exports.getUserById = async (req, res) => {
+const getUserById = async (req, res) => {
     try {
         const { entreprise } = req.user;
         const userId = req.params.id;
@@ -57,7 +57,7 @@ exports.getUserById = async (req, res) => {
 };
 
 // Update user (admin can update any user in their company, users can only update themselves)
-exports.updateUser = async (req, res) => {
+const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
@@ -116,7 +116,7 @@ exports.updateUser = async (req, res) => {
 };
 
 // Delete user (admin only)
-exports.deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
         const { role: currentUserRole, entreprise } = req.user;
@@ -168,7 +168,7 @@ exports.deleteUser = async (req, res) => {
 };
 
 // Change user password (users can change their own, admins can change any user in their company)
-exports.changePassword = async (req, res) => {
+const changePassword = async (req, res) => {
     try {
         const { id } = req.params;
         const { currentPassword, newPassword } = req.body;
@@ -233,3 +233,10 @@ exports.changePassword = async (req, res) => {
         });
     }
 };
+module.exports = {
+    getCompanyUsers,
+    changePassword,
+    getUserById,
+    deleteUser,
+    updateUser
+}

@@ -7,6 +7,8 @@ const StockRouter = require('./routes/StockRoute');
 
 dotenv.config()
 
+connectdb();
+
 const app = express();
 
 app.use(cors());
@@ -20,8 +22,9 @@ app.get('/' , async (req , res) => {
         message: "welcome to our service",
      });
 });
+console.log("slakld")
 app.use('/api/AuthRoute' , AuthRouter);
-console.log(AuthRouter);
+console.log("AuthRouter");
 
 app.get('/api/health' , (req , res) =>{
     res.status(200).json({
@@ -34,7 +37,7 @@ app.get('/api/health' , (req , res) =>{
 const auth = require('./middleware/AuthMiddleware');
 app.use(auth);
 
-
+app.use('/api/StockRoute' , StockRouter);
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development'
 app.listen(PORT , () => {

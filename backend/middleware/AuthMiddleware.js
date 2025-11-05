@@ -2,9 +2,11 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 const express = require('express');
 const app = express();
+const permissions = [String , String];
+
 const auth = async (req , res , next) => {
      let token;
-     const SECRETKEY = process.env.JWT_SECRET || "s5dds62s5c6d";
+     const SECRETKEY = process.env.JWT_SECRET || "skmdpcdpd4525";
      console.log("req.header" , req.method)
      if(req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
           token = req.headers.authorization.split(" ")[1];
@@ -27,10 +29,8 @@ const auth = async (req , res , next) => {
           }
           else {
                req.user = User.findById(decoded.id);
-               res.status(200).json({
-                    success: true,
-                    message: "user trouvable",
-               });
+               
+               next();
           };
 
      }
