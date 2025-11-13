@@ -34,7 +34,7 @@ const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
 
 
-const SidebarContext = React.createContext<SidebarContextProps | null>(null);
+const SidebarContext = React.createContext(null);
 
 function useSidebar() {
   const context = React.useContext(SidebarContext);
