@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const EntrepriseModel = require('./EntrepriseModel');
+const CompanyModel = require('./CompanyModel');
 const StockSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -18,6 +18,6 @@ const StockSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    EntrepriseModel
+    CompanyModel
 }, {timestamps: true});
 module.exports = mongoose.model('Stock' , StockSchema);

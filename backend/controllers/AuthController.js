@@ -1,21 +1,21 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserModel');
 
-const generateToken = (userId, role, entreprise) => {
+const generateToken = (userId, role, company) => {
 	const secret = process.env.JWT_SECRET || "skmdpcdpd4525";
 	return jwt.sign({ 
 		id: userId,
 		role: role,
-		entreprise: entreprise
+		company: company
 	}, secret, { expiresIn: '1d' });
 };
 
 // Helper to check if user has admin rights for their company
-const isCompanyAdmin = async (userId, entreprise) => {
+const isCompanyAdmin = async (userId, company) => {
 	const user = await User.findOne({ 
 		_id: userId, 
 		role: 'admin', 
-		entreprise: entreprise 
+		company: company 
 	});
 	return !!user;
 };
@@ -23,9 +23,9 @@ const isCompanyAdmin = async (userId, entreprise) => {
 // Register a new user
 const register = async (req, res) => {
 	try {
-		const { username, email, password, entreprise, phone_number, role } = req.body;
+		const { username, email, password, company, phone_number, role } = req.body;
 
-		if (!username || !email || !password || !entreprise || !phone_number) {
+		if (!username || !email || !password || !company || !phone_number) {
 			return res.status(400).json({ success: false, message: 'Missing required fields' });
 		}
 
@@ -46,13 +46,13 @@ const register = async (req, res) => {
 			username, 
 			email, 
 			password, 
-			entreprise, 
+			company, 
 			phone_number, 
 			role: role || 'staff' // Default to staff if not specified
 		});
 		await user.save();
 
-		const token = generateToken(user._id, user.role, user.entreprise);
+		const token = generateToken(user._id, user.role, user.company);
 
 		return res.status(201).json({
 			success: true,
@@ -62,7 +62,7 @@ const register = async (req, res) => {
 					username: user.username,
 					email: user.email,
 					role: user.role,
-					entreprise: user.entreprise,
+					company: user.company,
 					phone_number: user.phone_number,
 				},
 				token,
@@ -92,7 +92,7 @@ const login = async (req, res) => {
 			return res.status(401).json({ success: false, message: 'Invalid credentials' });
 		}
 
-		const token = generateToken(user._id, user.role, user.entreprise);
+		const token = generateToken(user._id, user.role, user.company);
 
 		return res.status(200).json({
 			success: true,
@@ -102,7 +102,7 @@ const login = async (req, res) => {
 					username: user.username,
 					email: user.email,
 					role: user.role,
-					entreprise: user.entreprise,
+					company: user.company,
 					phone_number: user.phone_number,
 				},
 				token,

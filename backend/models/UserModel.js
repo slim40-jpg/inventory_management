@@ -22,7 +22,7 @@ const UserSchema = new mongoose.Schema({
         enum: ['admin' , 'staff'],
         default: 'staff'
     },
-    entreprise: {
+    company: {
         type: String,
         required: true
     },

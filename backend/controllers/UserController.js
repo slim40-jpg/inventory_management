@@ -1,153 +1,194 @@
 const User = require('../models/UserModel');
+const bcrypt = require('bcryptjs');
 
-// Get all users from the same company
-const getCompanyUsers = async (req, res) => {
+//  Get all users of the same company (for "See staff members" page)
+exports.getCompanyUsers = async (req, res) => {
     try {
-        const { entreprise } = req.user;
-        
-        // Only return non-sensitive user data
-        const users = await User.find({ entreprise })
-            .select('-password')
-            .sort({ createdAt: -1 });
+        const { company, id: currentUserId } = req.user;
+
+        // Get all users in the same company
+        const users = await User.find({ company }).select('-password').sort({ createdAt: -1 });
+
+        // Format data for frontend
+        const formatted = users.map((user) => ({
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+            company: user.company,
+            phone_number: user.phone_number,
+            label:
+                user._id.toString() === currentUserId.toString()
+                    ? `${user.username} (you)`
+                    : user.role === 'admin'
+                    ? `${user.username} (admin)`
+                    : user.username,
+        }));
 
         return res.status(200).json({
             success: true,
-            data: users
+            data: formatted,
         });
     } catch (error) {
         console.error('UserController.getCompanyUsers error:', error);
         return res.status(500).json({
             success: false,
             message: 'Error fetching users',
-            error: error.message
+            error: error.message,
         });
     }
 };
 
-// Get user by ID (only from same company)
-const getUserById = async (req, res) => {
+//  Search company users by username (real-time search)
+exports.searchCompanyUsers = async (req, res) => {
     try {
-        const { entreprise } = req.user;
-        const userId = req.params.id;
+        const { company } = req.user;
+        const { username } = req.query;
 
-        const user = await User.findOne({
-            _id: userId,
-            entreprise
-        }).select('-password');
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
+        if (!username) {
+            return res.status(200).json({ success: true, data: [] });
         }
+
+        // Case-insensitive regex search
+        const regex = new RegExp('^' + username, 'i');
+        const users = await User.find({ company, username: regex }).select('-password');
 
         return res.status(200).json({
             success: true,
-            data: user
+            data: users,
         });
+    } catch (error) {
+        console.error('UserController.searchCompanyUsers error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error searching users',
+            error: error.message,
+        });
+    }
+};
+
+//  Get single user by ID (profile page)
+exports.getUserById = async (req, res) => {
+    try {
+        const { company } = req.user;
+        const { id } = req.params;
+
+        const user = await User.findOne({ _id: id, company }).select('-password');
+        if (!user)
+            return res.status(404).json({ success: false, message: 'User not found' });
+
+        return res.status(200).json({ success: true, data: user });
     } catch (error) {
         console.error('UserController.getUserById error:', error);
         return res.status(500).json({
             success: false,
-            message: 'Error fetching user',
-            error: error.message
+            message: 'Error fetching user profile',
+            error: error.message,
         });
     }
 };
 
-// Update user (admin can update any user in their company, users can only update themselves)
-const updateUser = async (req, res) => {
+//  Update own info (username, password, company, phone_number)
+exports.updateOwnProfile = async (req, res) => {
     try {
-        const { id } = req.params;
-        const updates = req.body;
-        const { role: currentUserRole, entreprise, id: currentUserId } = req.user;
+        const { id } = req.user; // logged-in user
+        const { username, password, company, phone_number } = req.body;
 
-        // Check if user exists and belongs to same company
-        const userToUpdate = await User.findOne({ _id: id, entreprise });
-        if (!userToUpdate) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
+        const user = await User.findById(id);
+        if (!user)
+            return res.status(404).json({ success: false, message: 'User not found' });
 
-        // Only allow admins to update other users
-        if (currentUserRole !== 'admin' && id !== currentUserId) {
-            return res.status(403).json({
-                success: false,
-                message: 'Not authorized to update other users'
-            });
-        }
+        // Update allowed fields
+        if (username) user.username = username;
+        if (phone_number) user.phone_number = phone_number;
+        if (company) user.company = company; // allowed since each company manages its own users
+        if (password) user.password = await bcrypt.hash(password, 12);
 
-        // Prevent role changes unless admin
-        if (updates.role && currentUserRole !== 'admin') {
-            return res.status(403).json({
-                success: false,
-                message: 'Only admins can change user roles'
-            });
-        }
-
-        // Prevent changing entreprise
-        delete updates.entreprise;
-        
-        // Remove sensitive fields from updates
-        delete updates.password;
-
-        // Update user
-        const updatedUser = await User.findByIdAndUpdate(
-            id,
-            { $set: updates },
-            { new: true }
-        ).select('-password');
+        await user.save();
 
         return res.status(200).json({
             success: true,
-            data: updatedUser
+            message: 'Profile updated successfully',
+            data: {
+                id: user._id,
+                username: user.username,
+                company: user.company,
+                phone_number: user.phone_number,
+            },
         });
     } catch (error) {
-        console.error('UserController.updateUser error:', error);
+        console.error('UserController.updateOwnProfile error:', error);
         return res.status(500).json({
             success: false,
-            message: 'Error updating user',
-            error: error.message
+            message: 'Error updating profile',
+            error: error.message,
         });
     }
 };
 
-// Delete user (admin only)
-const deleteUser = async (req, res) => {
+//  Admin adds a staff member
+exports.addStaff = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { role: currentUserRole, entreprise } = req.user;
+        const { role, company } = req.user; // logged-in admin
+        const { username, email, password, phone_number } = req.body;
 
-        // Only admins can delete users
-        if (currentUserRole !== 'admin') {
+        if (role !== 'admin') {
+            return res.status(403).json({ success: false, message: 'Only admins can add staff members' });
+        }
+
+        const exists = await User.findOne({ $or: [{ email }, { username }, { phone_number }] });
+        if (exists)
+            return res.status(400).json({ success: false, message: 'User with given credentials already exists' });
+
+        const newStaff = new User({
+            username,
+            email,
+            password,
+            company,
+            phone_number,
+            role: 'staff',
+        });
+
+        await newStaff.save();
+
+        return res.status(201).json({
+            success: true,
+            message: 'Staff member added successfully',
+            data: {
+                id: newStaff._id,
+                username: newStaff.username,
+                email: newStaff.email,
+                company: newStaff.company,
+            },
+        });
+    } catch (error) {
+        console.error('UserController.addStaff error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error adding staff member',
+            error: error.message,
+        });
+    }
+};
+
+//  Admin removes a staff member (not admins)
+exports.removeStaff = async (req, res) => {
+    try {
+        const { role, company } = req.user;
+        const { id } = req.params;
+
+        if (role !== 'admin')
+            return res.status(403).json({ success: false, message: 'Only admins can remove staff members' });
+
+        const userToDelete = await User.findOne({ _id: id, company });
+        if (!userToDelete)
+            return res.status(404).json({ success: false, message: 'User not found' });
+
+        // Prevent deleting other admins
+        if (userToDelete.role === 'admin') {
             return res.status(403).json({
                 success: false,
-                message: 'Only admins can delete users'
-            });
-        }
-
-        // Check if user exists and belongs to same company
-        const userToDelete = await User.findOne({ _id: id, entreprise });
-        if (!userToDelete) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        // Prevent deleting the last admin
-        const adminCount = await User.countDocuments({ 
-            entreprise, 
-            role: 'admin'
-        });
-        
-        if (adminCount <= 1 && userToDelete.role === 'admin') {
-            return res.status(400).json({
-                success: false,
-                message: 'Cannot delete the last admin user'
+                message: 'Admins cannot be deleted by other users',
             });
         }
 
@@ -155,88 +196,14 @@ const deleteUser = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: 'User deleted successfully'
+            message: 'Staff member removed successfully',
         });
     } catch (error) {
-        console.error('UserController.deleteUser error:', error);
+        console.error('UserController.removeStaff error:', error);
         return res.status(500).json({
             success: false,
-            message: 'Error deleting user',
-            error: error.message
+            message: 'Error removing staff member',
+            error: error.message,
         });
     }
 };
-
-// Change user password (users can change their own, admins can change any user in their company)
-const changePassword = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { currentPassword, newPassword } = req.body;
-        const { role: currentUserRole, entreprise, id: currentUserId } = req.user;
-
-        if (!newPassword || newPassword.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: 'New password must be at least 6 characters long'
-            });
-        }
-
-        // Check if user exists and belongs to same company
-        const userToUpdate = await User.findOne({ _id: id, entreprise });
-        if (!userToUpdate) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        // If not admin and not changing own password, deny
-        if (currentUserRole !== 'admin' && id !== currentUserId) {
-            return res.status(403).json({
-                success: false,
-                message: 'Not authorized to change other users passwords'
-            });
-        }
-
-        // If changing own password, verify current password
-        if (id === currentUserId) {
-            if (!currentPassword) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Current password is required'
-                });
-            }
-
-            const isMatch = await userToUpdate.comparePassword(currentPassword);
-            if (!isMatch) {
-                return res.status(401).json({
-                    success: false,
-                    message: 'Current password is incorrect'
-                });
-            }
-        }
-
-        // Update password
-        userToUpdate.password = newPassword;
-        await userToUpdate.save();
-
-        return res.status(200).json({
-            success: true,
-            message: 'Password updated successfully'
-        });
-    } catch (error) {
-        console.error('UserController.changePassword error:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error changing password',
-            error: error.message
-        });
-    }
-};
-module.exports = {
-    getCompanyUsers,
-    changePassword,
-    getUserById,
-    deleteUser,
-    updateUser
-}
