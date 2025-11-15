@@ -4,7 +4,7 @@ const dotenv = require('dotenv');
 const connectdb = require('./config/DataBase');
 const AuthRouter = require('./routes/AuthRoute');
 const StockRouter = require('./routes/StockRoute');
-
+const UserRouter = require('./routes/UserRoute');
 dotenv.config()
 
 connectdb();
@@ -38,8 +38,9 @@ const auth = require('./middleware/AuthMiddleware');
 app.use(auth);
 
 app.use('/api/StockRoute' , StockRouter);
+app.use('/api/UserRoute' , UserRouter);
 const PORT = process.env.PORT || 5000;
-const NODE_ENV = process.env.NODE_ENV || 'development'
+const NODE_ENV = process.env.NODE_ENV || 'development';
 app.listen(PORT , () => {
      console.log(`Server is running on ${PORT}`);
      console.log(`Environment : ${NODE_ENV}`);

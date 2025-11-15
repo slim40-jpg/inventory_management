@@ -8,5 +8,5 @@ route.delete('/delete/:id' , UserController.deleteUser);
 route.get('/user/:id' , UserController.getUserById);
 route.put('/user/:id' , UserController.updateUser);
 
-module.exports = router;
+module.exports = route;
 
