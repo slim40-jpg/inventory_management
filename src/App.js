@@ -5,6 +5,10 @@ import Register from "./register";
 import Dashboard from "./dashboard";
 import TableauDeBord from "./tableaudebord";
 import Depots from "./depots";
+import Materiel from "./materiel";
+import Movements from "./movements";
+import Reservations from "./reservations";
+import UserManagement from "./user_management";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"; 
 
 
@@ -19,6 +23,10 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/tableau-de-bord" element={<TableauDeBord />} />
         <Route path="/depots" element={<Depots />} />
+        <Route path="/materiel" element={<Materiel />} />
+        <Route path="/movements" element={<Movements />} />
+        <Route path="/reservations" element={<Reservations />} />
+        <Route path="/user_management" element={<UserManagement />} />
       </Routes>
     </Router>
   );

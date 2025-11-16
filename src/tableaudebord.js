@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from './Sidebar';
 import './tableaudebord.css';
 
 const TableauDeBord = () => {
@@ -26,31 +27,9 @@ const TableauDeBord = () => {
     }
   }, []);
 
-  const menuItems = [
-    { icon: '📊', label: 'Accueil', id: 'dashboard' },
-    { icon: '📊', label: 'Tableau de bord', id: 'tableau-de-bord', isActive: true },
-    { icon: '📦', label: 'Dépôts', id: 'depots' },
-    { icon: '📋', label: 'Matériel', id: 'materiel' },
-    { icon: '📈', label: 'Mouvements', id: 'movements' },
-    { icon: '📅', label: 'Réservations', id: 'reservations' },
-    { icon: '👥', label: 'Gestion des utilisateurs', id: 'users' }
-  ];
-
   const stats = [];
   const alertes = [];
   const reservations = [];
-
-  const handleMenuClick = (id) => {
-    if (id === 'dashboard') {
-      navigate('/dashboard');
-    } else if (id === 'tableau-de-bord') {
-      navigate('/tableau-de-bord');
-    } else if (id === 'depots') {
-      navigate('/depots');
-    } else {
-      console.log(`Navigate to: ${id}`);
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -61,34 +40,7 @@ const TableauDeBord = () => {
   return (
     <div className="tableau-container">
       {/* Sidebar */}
-      <aside className="tableau-sidebar">
-        <div className="sidebar-header">
-          <div className="logo-box">
-            <span className="logo-icon">📦</span>
-          </div>
-          <div className="logo-text">
-            <h2>web</h2>
-            <p>Gestion de stock</p>
-          </div>
-        </div>
-
-        <nav className="sidebar-menu">
-          {menuItems.map((item) => (
-            <a
-              key={item.id}
-              href="#"
-              className={`menu-item ${item.isActive ? 'active' : ''}`}
-              onClick={(e) => {
-                e.preventDefault();
-                handleMenuClick(item.id);
-              }}
-            >
-              <span className="menu-icon">{item.icon}</span>
-              <span className="menu-label">{item.label}</span>
-            </a>
-          ))}
-        </nav>
-      </aside>
+      <Sidebar activePage="tableau-de-bord" />
 
       {/* Main Content */}
       <main className="tableau-main">
@@ -137,7 +89,12 @@ const TableauDeBord = () => {
               </div>
               <div className="depots-list">
                 {depots.map((depot, idx) => (
-                  <div key={idx} className="depot-item">
+                  <div
+                    key={idx}
+                    className="depot-item"
+                    onClick={() => navigate(`/depots?depot=${depot.id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="depot-info">
                       <h4>{depot.name}</h4>
                       <span className="depot-capacity">{depot.capacity.used} / {depot.capacity.total}</span>

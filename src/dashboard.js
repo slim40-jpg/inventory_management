@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Sidebar from './Sidebar';
 import './dashboard.css';
 
 const Dashboard = () => {
@@ -43,15 +44,6 @@ const Dashboard = () => {
     }
   }, []);
 
-  const menuItems = [
-    { icon: '📊', label: 'Tableau de bord', id: 'dashboard' },
-    { icon: '📦', label: 'Dépôts', id: 'depots' },
-    { icon: '📋', label: 'Matériel', id: 'materiel' },
-    { icon: '📈', label: 'Mouvements', id: 'movements' },
-    { icon: '📅', label: 'Réservations', id: 'reservations' },
-    { icon: '👥', label: 'Gestion des utilisateurs', id: 'users' }
-  ];
-
   const quickCards = [
     { icon: '📊', title: 'Tableau de bord', id: 'dashboard' },
     { icon: '📦', title: 'Dépôts', id: 'depots' },
@@ -68,6 +60,8 @@ const Dashboard = () => {
       navigate('/tableau-de-bord');
     } else if (id === 'depots') {
       navigate('/depots');
+    } else if (id === 'materiel') {
+      navigate('/materiel');
     } else {
       console.log(`Navigate to: ${id}`);
     }
@@ -76,34 +70,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       {/* Sidebar */}
-      <aside className="dashboard-sidebar">
-        <div className="sidebar-header">
-          <div className="logo-box">
-            <span className="logo-icon">📦</span>
-          </div>
-          <div className="logo-text">
-            <h2>web</h2>
-            <p>Gestion de stock</p>
-          </div>
-        </div>
-
-        <nav className="sidebar-menu">
-          {menuItems.map((item) => (
-            <a
-              key={item.id}
-              href="#"
-              className="menu-item"
-              onClick={(e) => {
-                e.preventDefault();
-                handleMenuClick(item.id);
-              }}
-            >
-              <span className="menu-icon">{item.icon}</span>
-              <span className="menu-label">{item.label}</span>
-            </a>
-          ))}
-        </nav>
-      </aside>
+      <Sidebar activePage="dashboard" />
 
       {/* Main Content */}
       <main className="dashboard-main">
